@@ -1,0 +1,97 @@
+---
+title: "Project 1"
+format: html
+editor: visual
+---
+
+# Heart disease risk factors
+
+## Intro
+
+In this report we will look at a dataset that contains information about a group of patients undergoing an aniography (a type of X-ray to look at the blood vessels around the heart) where the researches collected several different attributes about the patients and also recorded the
+
+## Methods
+
+## Data exploration
+
+```{r}
+# Loading libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+# Set directory to to where the data is saved
+setwd("C:/Julie/epfl/MATH-517/test_project1")
+
+# Read dataset from csv file
+heart_data <- read.csv("heart_disease.csv")
+heart_data$num <- as.factor(heart_data$num)  # Convert num to a factor
+```
+
+Here we are taking a look at the stucture and content of the dataframe in order to get an idea of characteristics of the data.
+
+```{r}
+# Get the size of the dataframe(df)
+print(paste("The dataset has", nrow(heart_data), "rows and", ncol(heart_data), "columns."))
+```
+
+```{r}
+# Look the df
+head(heart_data)
+```
+
+The 'num' columns contains the information about the persons heart disease on a scale of integers from 0 (no presence) to 4.
+
+```{r}
+# Prevalence of each target category
+table(heart_data$num)
+```
+
+Here is a discription of the data
+
+| Variable Name | Type        | Description                                                                                       | Missing Values |
+|--------------|----------|------------------------------------|-------------|
+| age           | Integer     | Age in years                                                                                      | no             |
+| sex           | Categorical | Sex (0 = female; 1 = male)                                                                        | no             |
+| cp            | Categorical | Chest pain type (1 = typical angina; 2 = atypical angina; 3 = non-anginal pain; 4 = asymptomatic) | no             |
+| trestbps      | Integer     | Resting blood pressure (on admission to the hospital) (mm Hg)                                     | no             |
+| chol          | Integer     | Serum cholestoral (mg/dl)                                                                         | no             |
+| fbs           | Categorical | Fasting blood sugar \> 120 mg/dl                                                                  | no             |
+| restecg       | Categorical | Resting electrocardiographic results (0 = normal)                                                 | no             |
+| thalach       | Integer     | Maximum heart rate achieved                                                                       | no             |
+| exang         | Categorical | Exercise induced angina                                                                           | no             |
+| oldpeak       | Integer     | ST depression induced by exercise relative to rest                                                | no             |
+| slope         | Categorical | The slope of the peak exercise ST segment (1 = upsloping; 2 = flat; 3 = downsloping)              | no             |
+| ca            | Integer     | Number of major vessels (0-3) colored by fluoroscopy                                              | yes            |
+| thal          | Categorical | (3 = normal; 6 = fixed defect; 7 = reversable defect)                                             | yes            |
+| num           | Integer     | Diagnosis of heart disease                                                                        | no             |
+
+```{r}
+# restecg - violin
+# thalach - line
+# slope - categorical
+ggplot(heart_data, aes(x = num, y = slope)) +
+  geom_violin(trim = FALSE) +
+  theme_minimal()
+```
+
+```{r}
+ggplot(heart_data, aes(x = num, y = age)) +
+  geom_violin(trim = FALSE) +
+  labs(title = "Violin Plot of Age by Category",
+       x = "Category",
+       y = "Age") +
+  theme_minimal()
+```
+
+## Referenses
+
+The data:
+
+Janosi, A., Steinbrunn, W., Pfisterer, M., & Detrano, R. (1989). Heart Disease \[Dataset\]. UCI Machine Learning Repository. <https://doi.org/10.24432/C52P4X.>
+
+info about the study:
+
+<https://pubmed.ncbi.nlm.nih.gov/2756873/>
