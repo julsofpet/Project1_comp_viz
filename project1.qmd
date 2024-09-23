@@ -27,7 +27,25 @@ setwd("C:/Julie/epfl/MATH-517/test_project1")
 
 # Read dataset from csv file
 heart_data <- read.csv("heart_disease.csv")
+
+# Remove unwanted columns (e.g., 'cholesterol' and 'age')
+heart_data <- heart_data %>%
+  select(-trestbps, -fbs, -oldpeak, -thal) 
+
+# Remove the rows with NA values
+heart_data <- heart_data %>%
+  filter(!is.na(ca))
+
+# Create a new column 'heart_disease' based on binary values
+heart_data <- heart_data %>%
+  mutate(bin = ifelse(num == 0, 0, 1))  # 0 for no heart disease, 1 for heart disease
+
+heart_data$bin <- as.factor(heart_data$bin)  # Convert bin to a factor
 heart_data$num <- as.factor(heart_data$num)  # Convert num to a factor
+
+table(heart_data$bin)
+
+
 ```
 
 Here we are taking a look at the stucture and content of the dataframe in order to get an idea of characteristics of the data.
@@ -42,49 +60,109 @@ print(paste("The dataset has", nrow(heart_data), "rows and", ncol(heart_data), "
 head(heart_data)
 ```
 
-The 'num' columns contains the information about the persons heart disease on a scale of integers from 0 (no presence) to 4.
-
 ```{r}
-# Prevalence of each target category
-table(heart_data$num)
+table(heart_data$sex)
 ```
 
 Here is a discription of the data
 
-| Variable Name | Type        | Description                                                                                       | Missing Values |
-|--------------|----------|------------------------------------|-------------|
-| age           | Integer     | Age in years                                                                                      | no             |
-| sex           | Categorical | Sex (0 = female; 1 = male)                                                                        | no             |
-| cp            | Categorical | Chest pain type (1 = typical angina; 2 = atypical angina; 3 = non-anginal pain; 4 = asymptomatic) | no             |
-| trestbps      | Integer     | Resting blood pressure (on admission to the hospital) (mm Hg)                                     | no             |
-| chol          | Integer     | Serum cholestoral (mg/dl)                                                                         | no             |
-| fbs           | Categorical | Fasting blood sugar \> 120 mg/dl                                                                  | no             |
-| restecg       | Categorical | Resting electrocardiographic results (0 = normal)                                                 | no             |
-| thalach       | Integer     | Maximum heart rate achieved                                                                       | no             |
-| exang         | Categorical | Exercise induced angina                                                                           | no             |
-| oldpeak       | Integer     | ST depression induced by exercise relative to rest                                                | no             |
-| slope         | Categorical | The slope of the peak exercise ST segment (1 = upsloping; 2 = flat; 3 = downsloping)              | no             |
-| ca            | Integer     | Number of major vessels (0-3) colored by fluoroscopy                                              | yes            |
-| thal          | Categorical | (3 = normal; 6 = fixed defect; 7 = reversable defect)                                             | yes            |
-| num           | Integer     | Diagnosis of heart disease                                                                        | no             |
+| Variable Name | Type        | Description                                                                                            |
+|------------------|------------------|-------------------------------------|
+| age           | Integer     | Age in years                                                                                           |
+| sex           | Categorical | Sex (0 = female; 1 = male)                                                                             |
+| cp            | Categorical | Chest pain type (1 = typical angina; 2 = atypical angina; 3 = non-anginal pain; 4 = asymptomatic)      |
+| chol          | Integer     | Serum cholestoral (mg/dl)                                                                              |
+| restecg       | Categorical | Resting electrocardiographic results (0 = normal)                                                      |
+| thalach       | Integer     | Maximum heart rate achieved                                                                            |
+| exang         | Categorical | Exercise induced angina (0 = no; 1 = yes)                                                              |
+| slope         | Categorical | The slope of the peak exercise ST segment (1 = upsloping; 2 = flat; 3 = downsloping)                   |
+| ca            | Integer     | Number of major vessels (0-3) colored by fluoroscopy                                                   |
+| num           | Integer     | Diagnosis of heart disease (0 = no heart disease; 1 = mild; 2 = moderate; 3 = severe; 4 = very severe) |
+| bin           | Categorical | Diagnosis of heart disease (0 = no heart disease; 1 = heart disease present)                           |
 
 ```{r}
-# restecg - violin
-# thalach - line
-# slope - categorical
-ggplot(heart_data, aes(x = num, y = slope)) +
-  geom_violin(trim = FALSE) +
-  theme_minimal()
+# Assuming 'df' is your dataframe
+df_summary <- heart_data %>%
+  group_by(bin) %>%
+  summarize(across(where(is.numeric), mean, na.rm = TRUE)) %>%
+  pivot_longer(cols = -bin, names_to = "variable", values_to = "mean") %>%
+  pivot_wider(names_from = bin, values_from = mean, names_prefix = "")
+
+# View the result
+print(df_summary)
 ```
 
 ```{r}
-ggplot(heart_data, aes(x = num, y = age)) +
+ggplot(heart_data, aes(x = age, y = thalach, color = bin)) +
+  geom_point(size = 3) +  # Makes the points larger
+  geom_smooth(method = "lm", se = FALSE) +  # Add regression lines without confidence intervals
+  labs(title = "Scatterplot of Age vs Heart Rate by Heart Disease Status",
+       x = "Age",
+       y = "Heart Rate",
+       color = "Heart Disease Status") +  # Legend title
+  theme_minimal()
+
+```
+
+The 'num' columns contains the information about the persons heart disease on a scale of integers from 0 (no presence) to 4.
+
+Be careful about conclutions. Look like there are less people
+
+```{r}
+ggplot(heart_data, aes(x = bin, y = age)) +
   geom_violin(trim = FALSE) +
   labs(title = "Violin Plot of Age by Category",
        x = "Category",
        y = "Age") +
   theme_minimal()
 ```
+
+Women have less angina than men.
+
+```{r}
+# Modify the ggplot to use interaction between num and sex
+ggplot(heart_data, aes(x = interaction(bin, sex), y = cp)) +
+  geom_violin(trim = FALSE) +
+  labs(title = "Violin Plot of CP by Combined Categories",
+       x = "Combined Category (num and sex)",
+       y = "CP") +
+  theme_minimal()
+```
+
+```{r}
+# Convert 'sex' to a factor for labeling
+heart_data$sex <- factor(heart_data$sex, levels = c(0, 1), labels = c("Female", "Male"))
+
+# Create the plot with percentages by gender
+ggplot(heart_data, aes(x = sex, fill = factor(num))) +
+  geom_bar(position = "fill") +  # 'fill' will normalize the bars to percentages
+  scale_y_continuous(labels = scales::percent) +  # Format y-axis as percentages
+  scale_fill_discrete(name = "Heart Disease Severity", 
+                      labels = c("No Heart Disease", "Mild", "Moderate", "Severe", "Very Severe")) +
+  labs(title = "Percentage of Heart Disease Severity by Gender", 
+       x = "Gender", 
+       y = "Percentage") +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
+```
+
+```{r}
+# Create the plot
+ggplot(heart_data, aes(x = chol, fill = bin)) +
+  geom_histogram(binwidth = 10, color = "black", alpha = 0.7) +  # Histogram with specified bin width
+  facet_wrap(~ bin, scales = "fixed") +  # Ensure both plots share the same y-axis scale
+  labs(title = "Comparison of Cholesterol Levels by Heart Disease Status",
+       x = "Cholesterol Level (mg/dL)",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove the legend as we are already faceting
+
+```
+
+0: A lot around 200. 1: more above 200.
+
+We expected bigger differnce. Maybe bias in dataset?
 
 ## Referenses
 
