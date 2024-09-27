@@ -8,7 +8,9 @@ editor: visual
 
 ## Intro
 
-In this report we will look at a dataset that contains information about a group of patients undergoing an aniography (a type of X-ray to look at the blood vessels around the heart) where the researches collected several different attributes about the patients and also recorded the
+In this report we will look at a dataset that contains information about a group of patients undergoing an aniography (a type of X-ray to look at the blood vessels around the heart) where the researches collected several different attributes about the patients and also recorded the....
+
+Introduction to the Heart Disease Dataset Understanding the underlying factors associated with heart disease is crucial for improving diagnosis, prevention, and treatment. In our project for the course Statistical computation and visualization, we focus on analyzing how demographic and clinical variables, such as age, sex, cholesterol levels, chest pain types, and heart rate, correlate with the presence or absence of heart disease. By exploring these variables, we aim to uncover patterns and trends that could help identify at-risk individuals and contribute to better healthcare strategies. We seek to answer key questions such as: • What is the distribution of age among heart disease patients? • Is there a significant difference in heart disease prevalence between men and women? • How do cholesterol levels vary in individuals with heart disease? • What types of chest pain are most commonly associated with heart disease, and how do they differ between genders? For this purpose, we have used the Heart Disease dataset from the UCI Machine Learning Repository, compiled by various researchers and featuring clinical data from 303 patients. This dataset provides a rich foundation for understanding the complex factors related to heart disease, offering insights into how specific demographic and health indicators are linked to cardiovascular health outcomes.
 
 ## Methods
 
@@ -109,24 +111,46 @@ The 'num' columns contains the information about the persons heart disease on a 
 Be careful about conclutions. Look like there are less people
 
 ```{r}
-ggplot(heart_data, aes(x = bin, y = age)) +
-  geom_violin(trim = FALSE) +
-  labs(title = "Violin Plot of Age by Category",
-       x = "Category",
-       y = "Age") +
+ggplot(heart_data, aes(x = bin, fill = as.factor(ca))) +
+  geom_bar(position = "dodge") +
+  labs(title = "Grouped Bar Plot of Blocked Vessels by Category",
+       x = "Category (bin)",
+       y = "Count",
+       fill = "Blocked Vessels (ca)") +
   theme_minimal()
+
 ```
 
 Women have less angina than men.
 
 ```{r}
-# Modify the ggplot to use interaction between num and sex
-ggplot(heart_data, aes(x = interaction(bin, sex), y = cp)) +
+ggplot(heart_data, aes(x = bin, y = age, fill = as.factor(bin))) +
   geom_violin(trim = FALSE) +
-  labs(title = "Violin Plot of CP by Combined Categories",
-       x = "Combined Category (num and sex)",
-       y = "CP") +
+  scale_fill_manual(values = c("green", "red")) +  # Specify colors for categories
+  labs(title = "Violin Plot of Age by Category",
+       x = "Category (bin)",
+       y = "Age") +
   theme_minimal()
+
+```
+
+```{r}
+
+# Filter the data to include only rows where bin == 1
+filtered_data <- heart_data %>% filter(bin == 1)
+
+# Create the plot with the filtered data
+ggplot(filtered_data, aes(x = sex, fill = factor(cp))) +
+  geom_bar(position = "fill") +  # 'fill' will normalize the bars to percentages
+  scale_y_continuous(labels = scales::percent) +  # Format y-axis as percentages
+  scale_fill_discrete(name = "Heart Disease Severity", 
+                      labels = c("Typical angina", "Atypical angina", "Non-anginal pain", "Asymptomatic")) +
+  labs(title = "Percentage of Heart Disease Severity by Gender (bin = 1)", 
+       x = "Sex, Bin", 
+       y = "Percentage") +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
 ```
 
 ```{r}
